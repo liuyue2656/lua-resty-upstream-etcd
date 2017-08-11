@@ -129,7 +129,15 @@ local function ischeckdown(name, host, port)
     return _M.storage:get("checkdown:" .. name .. ":" .. host .. ":" .. port)
 end
 
-function _M.rr(name, status, ban_peer)
+local function init_last_upstream(premature, name)
+    local peers = _M.data[name].peers
+
+    for i=1,#peers do
+        peers[i].last_upstream = nil
+    end
+end
+
+function _M.rr(name, last_state_name, status, ban_peer)
     -- before pick check update
     update(name)
 
@@ -141,8 +149,25 @@ function _M.rr(name, status, ban_peer)
     local peers = _M.data[name].peers
     local total = 0
     local pick = nil
+    if status == nil then
+        status = "up"
+    end
+
+    if last_state_name == "failed" then
+        for i=1,#peers do
+            if peers[i].last_upstream then
+                peers[i].last_upstream = false
+            end
+        end
+        ngx.timer.at(10, init_last_upstream, name)
+    end
 
     for i=1,#peers do
+        if peers[i].last_upstream == false then
+            goto continue
+        end
+
+        peers[i].last_upstream = nil
         if ban_peer and #peers > 1 then
             if peers[i].host == ban_peer.host and peers[i].port == ban_peer.port then
                 goto continue
@@ -176,10 +201,10 @@ function _M.rr(name, status, ban_peer)
 
         peers[i].run_weight = peers[i].run_weight + peers[i].cfg_weight
         total = total + peers[i].cfg_weight
-
         if not peers[i].checkdown then
             if pick == nil or pick.run_weight < peers[i].run_weight then
                 pick = peers[i]
+                peers[i].last_upstream = true
             end
         end
 
@@ -187,7 +212,7 @@ function _M.rr(name, status, ban_peer)
     end
 
     if pick == nil and status ~= "backup" then
-        return _M.rr(name, "backup")
+        return _M.rr(name, last_state_name, "backup")
     end
 
     -- if all peers cfg_weight is 0, then reset.

@@ -1,5 +1,5 @@
 local _M = {}
-local http = require "http"
+local http = require "resty.http"
 local json = require "cjson"
 
 local log = ngx.log
@@ -28,17 +28,17 @@ local function errlog(...)
     log(ERR, "syncer: ", ...)
 end
 
--- local function copyTab(st)
---     local tab = {}
---     for k, v in pairs(st or {}) do
---         if type(v) ~= "table" then
---             tab[k] = v
---         else
---             tab[k] = copyTab(v)
---         end
---     end
---     return tab
--- end
+local function copyTab(st)
+    local tab = {}
+    for k, v in pairs(st or {}) do
+        if type(v) ~= "table" then
+            tab[k] = v
+        else
+            tab[k] = copyTab(v)
+        end
+    end
+    return tab
+end
 
 local function indexOf(t, e)
     for i=1,#t do
