@@ -359,7 +359,7 @@ function _M.init(cfg)
 
         -- start logchecker
         new_timer(0, spawn_logchecker)
-            end
+    end
 end
 
 return _M

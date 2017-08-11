@@ -129,7 +129,7 @@ local function ischeckdown(name, host, port)
     return _M.storage:get("checkdown:" .. name .. ":" .. host .. ":" .. port)
 end
 
-function _M.rr(name, ban_peer)
+function _M.rr(name, status, ban_peer)
     -- before pick check update
     update(name)
 
@@ -162,7 +162,7 @@ function _M.rr(name, ban_peer)
             goto continue
         end
 
-        if peers[i].status ~= "up" then
+        if peers[i].status ~= status then
             goto continue
         end
 
@@ -184,6 +184,10 @@ function _M.rr(name, ban_peer)
         end
 
         ::continue::
+    end
+
+    if pick == nil and status ~= "backup" then
+        return _M.rr(name, "backup")
     end
 
     -- if all peers cfg_weight is 0, then reset.
