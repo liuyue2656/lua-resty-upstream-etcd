@@ -159,7 +159,7 @@ function _M.rr(name, last_state_name, status, ban_peer)
                 peers[i].last_upstream = false
             end
         end
-        ngx.timer.at(10, init_last_upstream, name)
+        ngx.timer.at(3, init_last_upstream, name)
     end
 
     for i=1,#peers do
