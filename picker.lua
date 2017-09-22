@@ -204,7 +204,6 @@ function _M.rr(name, last_state_name, status, ban_peer)
         if not peers[i].checkdown then
             if pick == nil or pick.run_weight < peers[i].run_weight then
                 pick = peers[i]
-                peers[i].last_upstream = true
             end
         end
 
@@ -225,6 +224,7 @@ function _M.rr(name, last_state_name, status, ban_peer)
     if pick then
         pick.run_weight = pick.run_weight - total
         pick.checkdown = ischeckdown(name, pick.host, pick.port)
+        pick.last_upstream = true
     end
 
     return pick
